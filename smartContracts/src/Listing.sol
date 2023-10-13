@@ -28,7 +28,12 @@ contract Listing{
         return address(registryContract);
     }
 
+    //_price in wei
     function list(uint256 _tokenId, uint256 _price) public{ //add
+        //check if domain name is already listed
+        require(listing[_tokenId].tokenId == 0, "Domain name is already listed");
+        //check if domain name is in registry
+        require(registryContract.checkDomainNameListExpiry(_tokenId, registryContract.getDomainName(_tokenId))!=0, "Domain name is not in registry");
         //if expired cannot list
         require(registryContract.checkDomainNameListExpiry(_tokenId, registryContract.getDomainName(_tokenId))> block.timestamp, "Domain name expired");
         DomainName memory newListingData = DomainName({
@@ -58,10 +63,11 @@ contract Listing{
     function buy(uint256 _tokenId) public payable{  //buy the dns
         //if domain name expired, buyer cant buy
         DomainName memory domainName = listing[_tokenId];
+        require(domainName.tokenId != 0, "Domain name is not listed");
+        //owner cannot buy own domain name
+        require(registryContract.getOwnerAddressByTokenId(_tokenId) != msg.sender, "Owner cannot buy own domain name");
         require(registryContract.checkDomainNameListExpiry(_tokenId, registryContract.getDomainName(_tokenId))> block.timestamp, "Domain name expired");
         require(msg.value >= domainName.price, "Insufficient funds");
-        require(domainName.tokenId != 0, "Domain name is not listed");
-        // payable registryContract.getAddressByDomainName(_tokenId).transfer(domainName.price);
 
         address payable seller = payable(registryContract.getOwnerAddressByTokenId(_tokenId));
         seller.transfer(domainName.price);

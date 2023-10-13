@@ -5,7 +5,7 @@ source .env
 
 forge script script/Deploy.s.sol:DeployScript --rpc-url $MANTLE_TESTNET_RPC --private-key $PRIVATE_KEY --broadcast --verify  -vvvv --legacy
 
-forge script script/Deploy.s.sol:DeployScript --rpc-url $TAIKO_TESTNET_RPC --private-key $PRIVATE_KEY --broadcast --verify --vvvv --legacy
+forge script script/Deploy.s.sol:DeployScript --rpc-url $TAIKO_TESTNET_RPC --private-key $PRIVATE_KEY --broadcast --verify -vvvv --legacy
 
 # forge script script/Registry.s.sol:RegistryScript --rpc-url $MANTLE_TESTNET_RPC --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $TAIKO_ETHERSCAN_API_KEY --watch
 # forge script script/Registry.s.sol:RegistryScript --rpc-url $MANTLE_TESTNET_RPC --private-key $PRIVATE_KEY --broadcast -vvvv --legacy
