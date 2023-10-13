@@ -168,7 +168,7 @@ contract Registry {
         dnsData.ownerAddress = newOwnerAddress;
     }
 
-    function showDNSdata(uint256 _tokenId) public view returns(DNSData memory) {
+    function getDNSData(uint256 _tokenId) public view returns (DNSData memory) {
         return registry[_tokenId];
     }
 
@@ -182,10 +182,6 @@ contract Registry {
 
     function getOwnerAddressByTokenId(uint256 _tokenId) public view returns (address) {
         return registry[_tokenId].ownerAddress;
-    }
-
-    function getDNSData(uint256 _tokenId) public view returns (DNSData memory) {
-        return registry[_tokenId];
     }
 
     function getDomainName(uint256 _tokenId) public view returns (string memory) {
