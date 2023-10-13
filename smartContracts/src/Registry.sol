@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 contract Registry {
+
     struct DNSData {
         // address nftAddress; //identifier
         uint256 tokenId;    //identifier
@@ -113,8 +114,9 @@ contract Registry {
         //ACCEPT PAYMENT TO DEFAULT WALLET
         payable(address(0x1A10A9331F011D44eF360A3D416Ea8763e95F2C8)).transfer(_price);
 
-        return expiryPrice;
+        return registryLength;
     }
+
 
     function updateDNSData(
         uint256 _tokenId,
@@ -139,6 +141,32 @@ contract Registry {
 
     }
 
+ // as long as owner owns the nft and domain name is still active, can update expiry date
+    function updateExpiryDate(uint256 _tokenId, uint256 newExpiryDate) public checkExpiration(registry[_tokenId].expiryDate){ 
+        //as long as owner owns the nft and not expired then can update
+        require(registry[_tokenId].ownerAddress == msg.sender, "Only owner can update expiry date");
+        require(registry[_tokenId].expiryDate >= block.timestamp, "Domain has expired");// if its not expired, can update
+
+        //update registry expiry date
+        DNSData storage dnsData = registry[_tokenId];
+        dnsData.expiryDate = newExpiryDate;
+
+        //imagine 2 same domain names
+        //update domainNameList expiry date
+        // DomainData storage domainData = domainNameList[dnsData.domainName];
+        // domainData.expiryDate = newExpiryDate;
+
+        // domainNameList[registry[_nftAddress].domainName][_nftAddress].expiryDate = newExpiryDate;
+
+        DomainData[] storage domains = domainNameList[dnsData.domainName];
+        for (uint256 i = 0; i < domains.length; i++) {
+            if (domains[i].tokenId == _tokenId) {
+                domains[i].expiryDate= newExpiryDate;
+                break;
+            }
+        }
+    }
+
     //change owner of the domain name
     function updateOwner(uint256 _tokenId, address newOwnerAddress) public checkExpiration(registry[_tokenId].expiryDate){
         // require(registry[_tokenId].expiryDate >= block.timestamp, "Domain has expired");// if its not expired, can update
@@ -148,5 +176,53 @@ contract Registry {
 
     function showDNSdata(uint256 _tokenId) public view returns(DNSData memory) {
         return registry[_tokenId];
+    }
+
+//////////////////////////////////////////////////////////////////
+/////////////////////ADDITIONAL FUNCTIONS/////////////////////////
+//////////////////////////////////////////////////////////////////
+
+    function getDomainsByDomainName(string memory domainName) public view returns (DomainData[] memory) {
+        return domainNameList[domainName];
+    }
+
+    function getOwnerAddressByTokenId(uint256 _tokenId) public view returns (address) {
+        return registry[_tokenId].ownerAddress;
+    }
+
+    function getDNSData(uint256 _tokenId) public view returns (DNSData memory) {
+        return registry[_tokenId];
+    }
+
+    function getDomainName(uint256 _tokenId) public view returns (string memory) {
+        return registry[_tokenId].domainName;
+    }
+
+    function checkDomainNameListExpiry(uint256 _tokenId, string memory _domainName) public view returns(uint256){
+        DomainData[] storage domains = domainNameList[_domainName];
+        for (uint256 i = 0; i < domains.length; i++) {
+            if (domains[i].tokenId == _tokenId) {
+                return domains[i].expiryDate;
+            }
+        }
+        return 0;
+    }
+
+    function isExpiredDomainName(uint256 _tokenId) public view returns(string memory){
+        if (registry[_tokenId].expiryDate >= block.timestamp){
+            return "Domain name is still active";
+        } else {
+            return "Domain name has expired";
+        }
+    }
+
+    function checkActiveDomainName(string memory _domainName) public view returns(uint256){
+        DomainData[] storage domains = domainNameList[_domainName];
+        for (uint256 i = 0; i < domains.length; i++) {
+            if(domains[i].expiryDate>=block.timestamp){
+                return domains[i].expiryDate;
+            }
+        }
+        return 0;
     }
 }
