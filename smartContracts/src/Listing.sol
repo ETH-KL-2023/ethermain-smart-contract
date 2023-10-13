@@ -27,7 +27,7 @@ contract Listing{
     function getRegistryContract() public view returns(address){
         return address(registryContract);
     }
-    
+
     function list(uint256 _tokenId, uint256 _price) public{ //add
         //if expired cannot list
         require(registryContract.checkDomainNameListExpiry(_tokenId, registryContract.getDomainName(_tokenId))> block.timestamp, "Domain name expired");
@@ -49,6 +49,30 @@ contract Listing{
         require(listing[_tokenId].tokenId != 0, "Domain name is not listed");
         // listing[_tokenId].tokenId = 0;
         delete listing[_tokenId];
+    }
+
+    function getBalance() public view returns (uint256) {
+        return address(msg.sender).balance;
+    }
+
+    function buy(uint256 _tokenId) public payable{  //buy the dns
+        //if domain name expired, buyer cant buy
+        DomainName memory domainName = listing[_tokenId];
+        require(registryContract.checkDomainNameListExpiry(_tokenId, registryContract.getDomainName(_tokenId))> block.timestamp, "Domain name expired");
+        require(msg.value >= domainName.price, "Insufficient funds");
+        require(domainName.tokenId != 0, "Domain name is not listed");
+        // payable registryContract.getAddressByDomainName(_tokenId).transfer(domainName.price);
+
+        address payable seller = payable(registryContract.getOwnerAddressByTokenId(_tokenId));
+        seller.transfer(domainName.price);
+
+        registryContract.updateOwner(_tokenId, msg.sender);
+        // listing[_tokenId].tokenId = 0;
+        delete listing[_tokenId];
+    }
+
+    function getListingData(uint256 _tokenId) public view returns(uint256){
+        return (listing[_tokenId].price);
     }
 
 }

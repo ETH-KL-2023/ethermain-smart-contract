@@ -47,11 +47,6 @@ contract Registry {
     function registerDNS(
         string memory _domainName,
         uint256 expiryPrice
-        // address _nftAddress
-        // string memory _nameserver,
-        // string memory _keytag,
-        // string memory _algorithm,
-        // string memory _digestType
     ) public payable returns(uint256){
         // check if the domainName is already active or not
         DomainData[] storage existingDomains = domainNameList[_domainName];
@@ -117,7 +112,6 @@ contract Registry {
         return registryLength;
     }
 
-
     function updateDNSData(
         uint256 _tokenId,
         // uint256 _expiryDate,
@@ -127,7 +121,7 @@ contract Registry {
         string memory _newAlgorithm,
         string memory _newDigestType,
         string memory _newDigest
-    ) public {
+    ) public {  
         DNSData storage dnsData = registry[_tokenId];
         require(msg.sender == dnsData.ownerAddress, "Only owner can update NFT data");
         require(registry[_tokenId].expiryDate >= block.timestamp, "Domain has expired");// if its not expired, can update
