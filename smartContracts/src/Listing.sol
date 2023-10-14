@@ -86,6 +86,9 @@ contract Listing{
     //give function the token id and return the 
     //tokenid, price, domain name, owner address
     function getListingData(uint256 _tokenId)public view returns(uint256, uint256, string memory, address){
+        DomainName memory domainName = listing[_tokenId];
+        require(domainName.tokenId != 0, "Domain name is not listed");
+
         //return the tokenid, price, domain name, owner address
         return (listing[_tokenId].tokenId, 
         listing[_tokenId].price, 
