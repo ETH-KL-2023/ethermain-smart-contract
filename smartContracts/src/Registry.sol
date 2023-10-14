@@ -44,9 +44,18 @@ contract Registry {
         return address(msg.sender).balance;
     }
 
+    //1=Taiko
+    //2=Mantle all wei * 5000
+
+    //FUNCTIONS THAT NEED NETWORK PARAMETER
+    //registerDNS
+    //updateExpiryDate
+
     function registerDNS(
         string memory _domainName,
-        uint256 expiryPrice
+        uint256 expiryPrice //,
+        // string memory network,
+
     ) public payable returns(uint256){
         // check if the domainName is already active or not
         DomainData[] storage existingDomains = domainNameList[_domainName];
@@ -64,22 +73,25 @@ contract Registry {
         uint256 _expiryDate;
         uint256 _price;
 
-        if (expiryPrice == 1) {
-            _expiryDate = block.timestamp + 2592000; // 30 days
-            _price = 10**16; // 0.01 ether in wei
-        } else if (expiryPrice == 2) {
-            _expiryDate = block.timestamp + 7776000; // 90 days
-            _price = 25 * 10**15; // 0.025 ether in wei
-        } else if (expiryPrice == 3) {
-            _expiryDate = block.timestamp + 31536000; // 365 days
-            _price = 50 * 10**15; // 0.05 ether in wei
-        } else if (expiryPrice == 4) {
-            _expiryDate = block.timestamp + 63072000; // 730 days
-            _price = 10**17; // 0.1 ether in wei
-        } else {
-            revert("Invalid expiry price ID");
-        }
+        // if(network==1){
+            if (expiryPrice == 1) {
+                _expiryDate = block.timestamp + 2592000; // 30 days
+                _price = 0.015 * 10**18; // 0.01 ether in wei //0.015
+            } else if (expiryPrice == 2) {
+                _expiryDate = block.timestamp + 7776000; // 90 days
+                _price = 0.03 * 10**18; // 0.025 ether in wei //0.03
+            } else if (expiryPrice == 3) {
+                _expiryDate = block.timestamp + 31536000; // 365 days
+                _price = 0.055 * 10**18; // 0.05 ether in wei //0.055
+            } else if (expiryPrice == 4) {
+                _expiryDate = block.timestamp + 63072000; // 730 days
+                _price = 0.105 * 10**18; // 0.1 ether in wei //0.105
+            } else {
+                revert("Invalid expiry price ID");
+            }
+        // } else{}
 
+        //mantle = wei * 5000
         require(address(msg.sender).balance >= _price, "Insufficient contract balance");
 
         registryLength++;
@@ -132,27 +144,55 @@ contract Registry {
         dnsData.algorithm = _newAlgorithm;
         dnsData.digestType = _newDigestType;
         dnsData.digest = _newDigest;
-
     }
 
     // as long as owner owns the nft and domain name is still active, can update expiry date
-    function updateExpiryDate(uint256 _tokenId, uint256 newExpiryDate) public checkExpiration(registry[_tokenId].expiryDate){ 
+    function updateExpiryDate(uint256 _tokenId, uint256 expiryPrice) public payable checkExpiration(registry[_tokenId].expiryDate){ 
         //as long as owner owns the nft and not expired then can update
         require(registry[_tokenId].ownerAddress == msg.sender, "Only owner can update expiry date");
         require(registry[_tokenId].expiryDate >= block.timestamp, "Domain has expired");// if its not expired, can update
 
+        //Get Current domain name expiry date
+        uint256 currentExpiryDate = registry[_tokenId].expiryDate;
+
+        uint256 _newExpiryDate;
+        uint256 _price;
+        // if(network==1){
+            if (expiryPrice == 1) {
+                _newExpiryDate = currentExpiryDate + 2592000; // 30 days
+                _price = 0.015 * 10**18; // 0.01 ether in wei //0.015
+            } else if (expiryPrice == 2) {
+                _newExpiryDate = currentExpiryDate + 7776000; // 90 days
+                _price = 0.03 * 10**18; // 0.025 ether in wei //0.03
+            } else if (expiryPrice == 3) {
+                _newExpiryDate = currentExpiryDate + 31536000; // 365 days
+                _price = 0.055 * 10**18; // 0.05 ether in wei //0.055
+            } else if (expiryPrice == 4) {
+                _newExpiryDate = currentExpiryDate + 63072000; // 730 days
+                _price = 0.105 * 10**18; // 0.1 ether in wei //0.105
+            } else {
+                revert("Invalid expiry price ID");
+            }
+        // } else{}
+
+        require(address(msg.sender).balance >= _price, "Insufficient contract balance");
+
         //update registry expiry date
         DNSData storage dnsData = registry[_tokenId];
-        dnsData.expiryDate = newExpiryDate;
+        dnsData.expiryDate = _newExpiryDate;
 
         //update domainNameList expiry date
         DomainData[] storage domains = domainNameList[dnsData.domainName];
         for (uint256 i = 0; i < domains.length; i++) {
             if (domains[i].tokenId == _tokenId) {
-                domains[i].expiryDate= newExpiryDate;
+                domains[i].expiryDate= _newExpiryDate;
                 break;
             }
         }
+
+        //Pay the price of the new expiry date
+        payable(address(0x1A10A9331F011D44eF360A3D416Ea8763e95F2C8)).transfer(_price);
+
     }
 
     //change owner of the domain name
@@ -160,7 +200,7 @@ contract Registry {
         // require(registry[_tokenId].expiryDate >= block.timestamp, "Domain has expired");// if its not expired, can update
         DNSData storage dnsData = registry[_tokenId];
         dnsData.ownerAddress = newOwnerAddress;
-        
+
         //Reset DNS DATA when owner changes
         // dnsData.nameserver1 = "";
         // dnsData.nameserver2 = "";
@@ -202,6 +242,10 @@ contract Registry {
             }
         }
         return 0;
+    }
+
+    function getExpiryByTokenId(uint256 _tokenId) public view returns(uint256,uint256){
+        return (registry[_tokenId].expiryDate, domainNameList[registry[_tokenId].domainName][0].expiryDate);
     }
 
     //see if the domain name is expired that returns is active or has expired

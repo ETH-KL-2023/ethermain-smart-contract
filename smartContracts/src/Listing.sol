@@ -19,6 +19,13 @@ contract Listing{
     
     mapping(uint256 => DomainName) public listing;
 
+    //1=Taiko
+    //2=Mantle all wei * 5000
+
+    //FUNCTIONS THAT NEED NETWORK PARAMETER
+    // list
+    // buy
+
     function setRegistryContract(address _registry) public{
         require(_registry != address(0), "Invalid registry address");
         registryContract = Registry(_registry);
@@ -96,4 +103,9 @@ contract Listing{
         registryContract.getOwnerAddressByTokenId(_tokenId));
     }
 
+    //NEED FIXES
+    //type domain name return tokenId
+    // function getListingTokenId(string memory _domainName) public view returns(uint256){
+    //     return registryContract.getTokenIdByDomainName(_domainName);
+    // }
 }
