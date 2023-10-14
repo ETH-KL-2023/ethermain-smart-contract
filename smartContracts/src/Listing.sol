@@ -30,6 +30,8 @@ contract Listing{
 
     //_price in wei
     function list(uint256 _tokenId, uint256 _price) public{ //add
+        //check if _price is 0
+        require(_price != 0, "Price cannot be 0");
         //check if domain name is already listed
         require(listing[_tokenId].tokenId == 0, "Domain name is already listed");
         //check if domain name is in registry
@@ -77,8 +79,18 @@ contract Listing{
         delete listing[_tokenId];
     }
 
-    function getListingData(uint256 _tokenId) public view returns(uint256){
+    function getListingPrice(uint256 _tokenId) public view returns(uint256){
         return (listing[_tokenId].price);
+    }
+
+    //give function the token id and return the 
+    //tokenid, price, domain name, owner address
+    function getListingData(uint256 _tokenId)public view returns(uint256, uint256, string memory, address){
+        //return the tokenid, price, domain name, owner address
+        return (listing[_tokenId].tokenId, 
+        listing[_tokenId].price, 
+        registryContract.getDomainName(_tokenId), 
+        registryContract.getOwnerAddressByTokenId(_tokenId));
     }
 
 }

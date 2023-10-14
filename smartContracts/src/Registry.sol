@@ -160,6 +160,14 @@ contract Registry {
         // require(registry[_tokenId].expiryDate >= block.timestamp, "Domain has expired");// if its not expired, can update
         DNSData storage dnsData = registry[_tokenId];
         dnsData.ownerAddress = newOwnerAddress;
+        
+        //Reset DNS DATA when owner changes
+        // dnsData.nameserver1 = "";
+        // dnsData.nameserver2 = "";
+        // dnsData.keytag = "";
+        // dnsData.algorithm = "";
+        // dnsData.digestType = "";
+        // dnsData.digest = "";
     }
 
     function getDNSData(uint256 _tokenId) public view returns (DNSData memory) {
