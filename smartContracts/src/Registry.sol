@@ -135,7 +135,7 @@ contract Registry {
 
     }
 
- // as long as owner owns the nft and domain name is still active, can update expiry date
+    // as long as owner owns the nft and domain name is still active, can update expiry date
     function updateExpiryDate(uint256 _tokenId, uint256 newExpiryDate) public checkExpiration(registry[_tokenId].expiryDate){ 
         //as long as owner owns the nft and not expired then can update
         require(registry[_tokenId].ownerAddress == msg.sender, "Only owner can update expiry date");
@@ -145,13 +145,7 @@ contract Registry {
         DNSData storage dnsData = registry[_tokenId];
         dnsData.expiryDate = newExpiryDate;
 
-        //imagine 2 same domain names
         //update domainNameList expiry date
-        // DomainData storage domainData = domainNameList[dnsData.domainName];
-        // domainData.expiryDate = newExpiryDate;
-
-        // domainNameList[registry[_nftAddress].domainName][_nftAddress].expiryDate = newExpiryDate;
-
         DomainData[] storage domains = domainNameList[dnsData.domainName];
         for (uint256 i = 0; i < domains.length; i++) {
             if (domains[i].tokenId == _tokenId) {
@@ -176,18 +170,22 @@ contract Registry {
 /////////////////////ADDITIONAL FUNCTIONS/////////////////////////
 //////////////////////////////////////////////////////////////////
 
+    //get all domains by the domain name
     function getDomainsByDomainName(string memory domainName) public view returns (DomainData[] memory) {
         return domainNameList[domainName];
     }
 
+    //get owner address from tokenId
     function getOwnerAddressByTokenId(uint256 _tokenId) public view returns (address) {
         return registry[_tokenId].ownerAddress;
     }
 
+    //get domain name from tokenId
     function getDomainName(uint256 _tokenId) public view returns (string memory) {
         return registry[_tokenId].domainName;
     }
 
+    //check expiry date from domainNameList
     function checkDomainNameListExpiry(uint256 _tokenId, string memory _domainName) public view returns(uint256){
         DomainData[] storage domains = domainNameList[_domainName];
         for (uint256 i = 0; i < domains.length; i++) {
@@ -198,6 +196,7 @@ contract Registry {
         return 0;
     }
 
+    //see if the domain name is expired that returns is active or has expired
     function isExpiredDomainName(uint256 _tokenId) public view returns(string memory){
         if (registry[_tokenId].expiryDate >= block.timestamp){
             return "Domain name is still active";
@@ -205,14 +204,27 @@ contract Registry {
             return "Domain name has expired";
         }
     }
+    
+    //check if the domain name is expired that returns is active or has expired
+    //true is active
+    //false is expired
+    function checkdomainNameActiveExpiredBool(uint256 _tokenId) public view returns(bool){
+        if (registry[_tokenId].expiryDate >= block.timestamp){
+            return true;
+        } else {
+            return false;
+        }
+    }
 
+    //Get the active domain name (incase there are multiple domain names with the same name)
     function checkActiveDomainName(string memory _domainName) public view returns(uint256){
         DomainData[] storage domains = domainNameList[_domainName];
         for (uint256 i = 0; i < domains.length; i++) {
             if(domains[i].expiryDate>=block.timestamp){
-                return domains[i].expiryDate;
+                return domains[i].tokenId;
             }
         }
         return 0;
     }
+
 }
